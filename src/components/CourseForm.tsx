@@ -1,13 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { Course, CourseStatus, CourseSession } from '../types';
 import { generateId, DAYS, STATUSES } from '../utils';
-import { PlusCircle, Clock, MapPin } from 'lucide-react';
+import { PlusCircle, Clock, MapPin, Save, X, Edit } from 'lucide-react';
 
 interface CourseFormProps {
   onAddCourse: (course: Course) => void;
+  onUpdateCourse: (course: Course) => void;
+  onCancelEdit: () => void;
+  courseToEdit?: Course | null;
 }
 
-const CourseForm: React.FC<CourseFormProps> = ({ onAddCourse }) => {
+const CourseForm: React.FC<CourseFormProps> = ({
+  onAddCourse,
+  onUpdateCourse,
+  onCancelEdit,
+  courseToEdit
+}) => {
   const [name, setName] = useState('');
   const [campus, setCampus] = useState('');
   const [group, setGroup] = useState('');
@@ -21,43 +29,50 @@ const CourseForm: React.FC<CourseFormProps> = ({ onAddCourse }) => {
     { day: 'Lunes', startTime: '', endTime: '', classroom: '' }
   ]);
 
+  // Load course data when editing
   useEffect(() => {
-    // Adjust sessions array based on frequency
-    if (frequency === 1) {
-      setSessions(prev => [prev[0]]);
+    if (courseToEdit) {
+      setName(courseToEdit.name);
+      setCampus(courseToEdit.campus);
+      setGroup(courseToEdit.group);
+      setProfessor(courseToEdit.professor);
+      setQuota(courseToEdit.quota);
+      setReserved(courseToEdit.reserved);
+      setStatus(courseToEdit.status);
+
+      const sessionCount = courseToEdit.sessions.length;
+      setFrequency(sessionCount > 1 ? 2 : 1);
+
+      // Clean up session IDs for the form state
+      setSessions(courseToEdit.sessions.map(({ day, startTime, endTime, classroom }) => ({
+        day, startTime, endTime, classroom
+      })));
     } else {
-      setSessions(prev => {
-        if (prev.length >= 2) return prev.slice(0, 2);
-        return [...prev, { day: 'Jueves', startTime: '', endTime: '', classroom: '' }];
-      });
+      resetForm();
+    }
+  }, [courseToEdit]);
+
+  // Adjust sessions when frequency changes manually
+  useEffect(() => {
+    if (!courseToEdit) {
+        // Only adjust if not loading a course, or if user explicitly changes frequency
+        // Actually, better logic:
+        if (frequency === 1 && sessions.length > 1) {
+            setSessions(prev => [prev[0]]);
+        } else if (frequency === 2 && sessions.length < 2) {
+             setSessions(prev => [...prev, { day: 'Jueves', startTime: '', endTime: '', classroom: '' }]);
+        }
+    } else {
+        // If editing, and user changes frequency
+        if (frequency === 1 && sessions.length > 1) {
+            setSessions(prev => [prev[0]]);
+        } else if (frequency === 2 && sessions.length < 2) {
+             setSessions(prev => [...prev, { day: 'Jueves', startTime: '', endTime: '', classroom: '' }]);
+        }
     }
   }, [frequency]);
 
-  const handleSessionChange = (index: number, field: keyof Omit<CourseSession, 'id'>, value: string) => {
-    const newSessions = [...sessions];
-    newSessions[index] = { ...newSessions[index], [field]: value };
-    setSessions(newSessions);
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    const newCourse: Course = {
-      id: generateId(),
-      name,
-      campus,
-      group,
-      professor,
-      quota,
-      reserved,
-      status,
-      isScheduled: false, // Always starts as pending
-      sessions: sessions.map(s => ({ ...s, id: generateId() }))
-    };
-
-    onAddCourse(newCourse);
-
-    // Reset form
+  const resetForm = () => {
     setName('');
     setCampus('');
     setGroup('');
@@ -69,12 +84,70 @@ const CourseForm: React.FC<CourseFormProps> = ({ onAddCourse }) => {
     setSessions([{ day: 'Lunes', startTime: '', endTime: '', classroom: '' }]);
   };
 
+  const handleSessionChange = (index: number, field: keyof Omit<CourseSession, 'id'>, value: string) => {
+    const newSessions = [...sessions];
+    newSessions[index] = { ...newSessions[index], [field]: value };
+    setSessions(newSessions);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    // Create new sessions with IDs (reuse existing IDs if editing? better to regenerate or keep?)
+    // If editing, we should try to keep IDs if possible, but sessions structure might have changed.
+    // For simplicity, let's regenerate session IDs or map them.
+
+    let finalSessions: CourseSession[];
+
+    if (courseToEdit) {
+        // Try to preserve IDs for existing indices
+        finalSessions = sessions.map((s, i) => ({
+            ...s,
+            id: courseToEdit.sessions[i]?.id || generateId()
+        }));
+    } else {
+        finalSessions = sessions.map(s => ({ ...s, id: generateId() }));
+    }
+
+    const courseData: Course = {
+      id: courseToEdit ? courseToEdit.id : generateId(),
+      name,
+      campus,
+      group,
+      professor,
+      quota,
+      reserved,
+      status,
+      isScheduled: courseToEdit ? courseToEdit.isScheduled : false, // Keep scheduled status if editing
+      sessions: finalSessions
+    };
+
+    if (courseToEdit) {
+        onUpdateCourse(courseData);
+    } else {
+        onAddCourse(courseData);
+        resetForm();
+    }
+  };
+
   return (
-    <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow-md mb-6">
-      <h2 className="text-xl font-semibold mb-4 text-gray-800 flex items-center gap-2">
-        <PlusCircle className="w-5 h-5" />
-        Agregar Nuevo Curso
-      </h2>
+    <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow-md mb-6 border-t-4 border-blue-600">
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-semibold text-gray-800 flex items-center gap-2">
+          {courseToEdit ? <Edit className="w-5 h-5" /> : <PlusCircle className="w-5 h-5" />}
+          {courseToEdit ? 'Editar Curso' : 'Agregar Nuevo Curso'}
+        </h2>
+        {courseToEdit && (
+            <button
+                type="button"
+                onClick={onCancelEdit}
+                className="text-gray-500 hover:text-gray-700"
+                title="Cancelar Edición"
+            >
+                <X className="w-5 h-5" />
+            </button>
+        )}
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
         {/* General Info */}
@@ -248,12 +321,22 @@ const CourseForm: React.FC<CourseFormProps> = ({ onAddCourse }) => {
         </div>
       </div>
 
-      <div className="mt-6 flex justify-end">
+      <div className="mt-6 flex justify-end gap-3">
+        {courseToEdit && (
+            <button
+                type="button"
+                onClick={onCancelEdit}
+                className="bg-gray-500 text-white px-6 py-2 rounded-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors"
+            >
+                Cancelar
+            </button>
+        )}
         <button
           type="submit"
-          className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+          className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors flex items-center gap-2"
         >
-          Guardar Curso (Pendiente)
+          {courseToEdit ? <Save className="w-4 h-4" /> : <PlusCircle className="w-4 h-4" />}
+          {courseToEdit ? 'Guardar Cambios' : 'Agregar Curso'}
         </button>
       </div>
     </form>

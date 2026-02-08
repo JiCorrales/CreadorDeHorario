@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Course } from '../types';
-import { Trash2, CalendarPlus, CalendarX, Edit, ChevronDown, ChevronUp, AlertTriangle } from 'lucide-react';
+import { Trash2, CalendarPlus, CalendarX, Edit, ChevronDown, ChevronUp } from 'lucide-react';
 
 interface CourseTableProps {
   courses: Course[];
@@ -9,9 +9,9 @@ interface CourseTableProps {
   onEdit?: (course: Course) => void;
 }
 
-const CourseTable: React.FC<CourseTableProps> = ({ 
-  courses, 
-  onToggleStatus, 
+const CourseTable: React.FC<CourseTableProps> = ({
+  courses,
+  onToggleStatus,
   onDelete,
   onEdit
 }) => {
@@ -29,17 +29,17 @@ const CourseTable: React.FC<CourseTableProps> = ({
   };
 
   const sortedAndFilteredCourses = courses
-    .filter(course => 
+    .filter(course =>
       course.name.toLowerCase().includes(filter.toLowerCase()) ||
       course.professor.toLowerCase().includes(filter.toLowerCase())
     )
     .sort((a, b) => {
       const aValue = a[sortField];
       const bValue = b[sortField];
-      
+
       if (typeof aValue === 'string' && typeof bValue === 'string') {
-        return sortDirection === 'asc' 
-          ? aValue.localeCompare(bValue) 
+        return sortDirection === 'asc'
+          ? aValue.localeCompare(bValue)
           : bValue.localeCompare(aValue);
       }
       return 0;
@@ -72,13 +72,13 @@ const CourseTable: React.FC<CourseTableProps> = ({
           onChange={(e) => setFilter(e.target.value)}
         />
       </div>
-      
+
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th 
-                scope="col" 
+              <th
+                scope="col"
                 className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                 onClick={() => handleSort('name')}
               >
@@ -139,17 +139,17 @@ const CourseTable: React.FC<CourseTableProps> = ({
                       <button
                         onClick={() => onToggleStatus(course.id)}
                         className={`p-1.5 rounded transition-colors ${
-                          course.isScheduled 
-                            ? 'text-yellow-600 hover:bg-yellow-50 hover:text-yellow-700' 
+                          course.isScheduled
+                            ? 'text-yellow-600 hover:bg-yellow-50 hover:text-yellow-700'
                             : 'text-green-600 hover:bg-green-50 hover:text-green-700'
                         }`}
                         title={course.isScheduled ? "Quitar del horario" : "Agregar al horario"}
                       >
                         {course.isScheduled ? <CalendarX className="w-4 h-4" /> : <CalendarPlus className="w-4 h-4" />}
                       </button>
-                      
+
                       {/* Edit button placeholder - logic can be added later */}
-                      <button 
+                      <button
                         className="p-1.5 text-blue-600 hover:bg-blue-50 hover:text-blue-700 rounded transition-colors"
                         title="Editar (Próximamente)"
                         onClick={() => onEdit && onEdit(course)}

@@ -16,11 +16,13 @@ function App() {
     createSchedule,
     deleteSchedule,
     addCourse,
+    updateCourse,
     removeCourse,
     toggleCourseStatus
   } = useSchedule();
 
   const [error, setError] = useState<string | null>(null);
+  const [courseToEdit, setCourseToEdit] = useState<Course | null>(null);
 
   // Auto-create initial schedule if none exists on mount
   useEffect(() => {
@@ -40,6 +42,30 @@ function App() {
       setError(err.message);
       setTimeout(() => setError(null), 5000);
     }
+  };
+
+  const handleUpdateCourse = (course: Course) => {
+    try {
+      setError(null);
+      if (!currentScheduleId) {
+         throw new Error('Por favor selecciona o crea un horario primero.');
+      }
+      updateCourse(course);
+      setCourseToEdit(null); // Exit edit mode
+    } catch (err: any) {
+      setError(err.message);
+      setTimeout(() => setError(null), 5000);
+    }
+  };
+
+  const handleEditCourse = (course: Course) => {
+    setCourseToEdit(course);
+    // Scroll to top to see the form
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleCancelEdit = () => {
+    setCourseToEdit(null);
   };
 
   const handleToggleStatus = (courseId: string) => {
@@ -75,7 +101,7 @@ function App() {
           </div>
         )}
 
-        <ScheduleManager
+        <ScheduleManager 
           schedules={schedules}
           currentScheduleId={currentScheduleId}
           onSwitchSchedule={setCurrentScheduleId}
@@ -87,20 +113,26 @@ function App() {
           <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
             {/* Left Column: Form */}
             <div className="xl:col-span-4 space-y-6">
-              <CourseForm onAddCourse={handleAddCourse} />
+              <CourseForm 
+                onAddCourse={handleAddCourse} 
+                onUpdateCourse={handleUpdateCourse}
+                courseToEdit={courseToEdit}
+                onCancelEdit={handleCancelEdit}
+              />
             </div>
 
             {/* Right Column: Schedule View & Table */}
             <div className="xl:col-span-8 space-y-8">
-              <ScheduleView
-                schedule={currentSchedule}
+              <ScheduleView 
+                schedule={currentSchedule} 
                 onRemoveCourse={handleUnscheduleFromView}
               />
-
-              <CourseTable
+              
+              <CourseTable 
                 courses={currentSchedule.courses}
                 onToggleStatus={handleToggleStatus}
                 onDelete={removeCourse}
+                onEdit={handleEditCourse}
               />
             </div>
           </div>

@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Schedule, Course } from '../types';
+import { Schedule } from '../types';
 import { DAYS } from '../utils';
 import { Trash2 } from 'lucide-react';
 import jsPDF from 'jspdf';
@@ -104,8 +104,8 @@ const ScheduleView: React.FC<ScheduleViewProps> = ({ schedule, onRemoveCourse })
         <div className="relative" style={{ height: `${(END_HOUR - START_HOUR + 1) * HOUR_HEIGHT}px` }}>
           {/* Horizontal Hour Lines */}
           {hours.map(hour => (
-            <div 
-              key={hour} 
+            <div
+              key={hour}
               className="absolute w-full border-b border-gray-300 flex items-start"
               style={{ top: `${(hour - START_HOUR) * HOUR_HEIGHT}px`, height: `${HOUR_HEIGHT}px` }}
             >
