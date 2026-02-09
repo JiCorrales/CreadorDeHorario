@@ -167,14 +167,16 @@ const ScheduleView: React.FC<ScheduleViewProps> = ({ schedule, onRemoveCourse })
     scheduledCourses.forEach((course, index) => {
         // Assign color based on index
         const color = COURSE_COLORS[index % COURSE_COLORS.length];
-        // Ensure color is valid, fallback to light gray if undefined (should not happen with modulo)
-        if (color) {
-             doc.setFillColor(color[0], color[1], color[2]);
-        } else {
-             doc.setFillColor(230, 230, 230);
-        }
 
         course.sessions.forEach(session => {
+            // Ensure color is set correctly for EACH session block
+            // because subsequent operations (setTextColor) might affect state depending on library version
+            if (color) {
+                 doc.setFillColor(color[0], color[1], color[2]);
+            } else {
+                 doc.setFillColor(230, 230, 230);
+            }
+
             const dayIndex = DAYS.indexOf(session.day);
             if (dayIndex === -1) return;
 
