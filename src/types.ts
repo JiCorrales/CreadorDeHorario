@@ -14,6 +14,7 @@ export interface Course {
   campus: string;
   group: string;
   professor: string;
+  credits: number;
   quota: number;
   reserved: boolean;
   status: CourseStatus;

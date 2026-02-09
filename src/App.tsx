@@ -1,14 +1,16 @@
 import { useState, useEffect } from 'react'
-import { Calendar, AlertCircle } from 'lucide-react'
+import { Calendar, AlertCircle, Moon, Sun } from 'lucide-react'
 import CourseForm from './components/CourseForm'
 import ScheduleView from './components/ScheduleView'
 import ScheduleManager from './components/ScheduleManager'
 import CourseTable from './components/CourseTable'
 import Modal from './components/Modal'
 import { useSchedule } from './hooks/useSchedule'
+import { useTheme } from './hooks/useTheme'
 import { Course } from './types'
 
 function App() {
+  const { theme, toggleTheme } = useTheme();
   const {
     schedules,
     currentSchedule,
@@ -84,17 +86,26 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 p-6 font-sans">
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 p-6 font-sans transition-colors duration-200">
       <div className="max-w-7xl mx-auto">
-        <header className="mb-8 flex items-center gap-3">
-          <Calendar className="w-8 h-8 text-blue-600" />
-          <h1 className="text-3xl font-bold text-gray-800">
-            Creador de Horarios Universitarios
-          </h1>
+        <header className="mb-8 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Calendar className="w-8 h-8 text-blue-600 dark:text-blue-400" />
+            <h1 className="text-3xl font-bold text-gray-800 dark:text-white">
+              Creador de Horarios Universitarios
+            </h1>
+          </div>
+          <button
+            onClick={toggleTheme}
+            className="p-2 rounded-full bg-white dark:bg-gray-800 text-gray-800 dark:text-yellow-300 shadow-sm hover:shadow-md transition-all border border-gray-200 dark:border-gray-700"
+            title={theme === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
+          >
+            {theme === 'dark' ? <Sun className="w-6 h-6" /> : <Moon className="w-6 h-6" />}
+          </button>
         </header>
 
         {error && (
-          <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6 flex items-center gap-2 rounded shadow-sm animate-pulse sticky top-4 z-50" role="alert">
+          <div className="bg-red-100 dark:bg-red-900/30 border-l-4 border-red-500 text-red-700 dark:text-red-300 p-4 mb-6 flex items-center gap-2 rounded shadow-sm animate-pulse sticky top-4 z-50" role="alert">
             <AlertCircle className="w-5 h-5" />
             <p>{error}</p>
           </div>
@@ -135,8 +146,8 @@ function App() {
             </div>
           </div>
         ) : (
-           <div className="text-center py-20 bg-white rounded-lg shadow">
-            <p className="text-xl text-gray-500">Cargando o no hay horario seleccionado...</p>
+           <div className="text-center py-20 bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700">
+            <p className="text-xl text-gray-500 dark:text-gray-400">Cargando o no hay horario seleccionado...</p>
           </div>
         )}
 

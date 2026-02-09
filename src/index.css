@@ -4,7 +4,7 @@
 
 /* Ensure inputs are visible in fullscreen */
 input, select, textarea {
-  @apply text-gray-800 bg-white;
+  @apply text-gray-800 dark:text-white bg-white dark:bg-gray-800;
 }
 
 :fullscreen input, :fullscreen select, :fullscreen textarea {
@@ -12,6 +12,48 @@ input, select, textarea {
   color: black;
 }
 
+.dark :fullscreen input, .dark :fullscreen select, .dark :fullscreen textarea {
+  background-color: #1f2937; /* gray-800 */
+  color: white;
+}
+
 ::backdrop {
     background-color: white;
+}
+
+/* Hide spin buttons for number inputs */
+/* Chrome, Safari, Edge, Opera */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Firefox */
+input[type=number] {
+  -moz-appearance: textfield;
+}
+
+/* Custom utility for select with hidden arrow but keeping functionality */
+.select-no-arrow {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: none;
+}
+
+/* Custom Select with smaller arrow */
+.custom-select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 0.5rem center;
+  background-repeat: no-repeat;
+  background-size: 1.5em 1.5em;
+  padding-right: 2.5rem;
+}
+
+.dark .custom-select {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%239ca3af' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
 }
