@@ -13,7 +13,7 @@ interface ScheduleViewProps {
 }
 
 const START_HOUR = 7;
-const END_HOUR = 22;
+const END_HOUR = 23;
 const HOUR_HEIGHT = 60; // px
 
 // Pastel colors for courses
@@ -207,16 +207,33 @@ const ScheduleView: React.FC<ScheduleViewProps> = ({ schedule, onRemoveCourse })
                 const textX = x + 2;
                 let textY = y + 4;
 
-                doc.text(course.name, textX, textY, { maxWidth: width - 4 });
+                // Adjust font size based on block height
+                const fontSize = height < 15 ? 7 : 8;
+                doc.setFontSize(fontSize);
+
+                // Course Name (Truncate if too long)
+                // Approximate char width 2mm
+                const maxChars = Math.floor((width - 4) / 1.5);
+                let name = course.name;
+                if (name.length > maxChars) {
+                    name = name.substring(0, maxChars - 1) + '...';
+                }
+
+                doc.text(name, textX, textY);
                 textY += 4;
 
-                doc.setFont('helvetica', 'normal');
-                doc.setFontSize(7);
-                doc.text(`${session.startTime}-${session.endTime}`, textX, textY);
-                textY += 3;
-                doc.text(session.classroom || '', textX, textY);
-                textY += 3;
-                doc.text((course.professor || '').split(' ')[0], textX, textY); // First name only to save space
+                if (height > 20) {
+                    doc.setFont('helvetica', 'normal');
+                    doc.setFontSize(6);
+                    doc.text(`${session.startTime}-${session.endTime}`, textX, textY);
+                    textY += 3;
+                    doc.text(session.classroom || '', textX, textY);
+                    textY += 3;
+
+                    let prof = (course.professor || '').split(' ')[0];
+                    if (prof.length > maxChars) prof = prof.substring(0, maxChars-1) + '.';
+                    doc.text(prof, textX, textY);
+                }
             }
         });
     });
