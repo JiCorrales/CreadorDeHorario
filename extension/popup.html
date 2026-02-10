@@ -19,6 +19,21 @@
       color: #4b5563;
       margin-bottom: 15px;
     }
+    .instructions {
+      background: #fef3c7;
+      border: 1px solid #f59e0b;
+      color: #92400e;
+      padding: 10px;
+      border-radius: 8px;
+      font-size: 12px;
+      line-height: 1.35;
+      text-align: left;
+      margin: 0 0 12px 0;
+    }
+    .instructions strong {
+      display: block;
+      margin-bottom: 6px;
+    }
     button {
       background-color: #2563eb;
       color: white;
@@ -61,6 +76,10 @@
 <body>
   <h2>Exportador de cursos</h2>
   <p>Extrae tus cursos de la página de matrícula para usarlos en el Creador de Horarios.</p>
+  <div class="instructions">
+    <strong>Importante</strong>
+    Primero haz clic en cada curso de la página de matrícula para desplegar su lista de horarios disponibles; asegúrate de que todos los horarios se hayan cargado en la página y estén presentes. Solo después de que los cursos y sus horarios estén completamente expandidos y visibles, procede a copiar el código HTML para usarlo en el Creador de Horarios.
+  </div>
   
   <button id="extractBtn">Copiar Datos al Portapapeles</button>
   

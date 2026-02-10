@@ -143,13 +143,6 @@ const UserManualModal: React.FC<UserManualModalProps> = ({ isOpen, onClose }) =>
                         </div>
                     </section>
 
-                    {/* 6. Soporte */}
-                    <section className="pt-4 border-t border-gray-200 dark:border-gray-700">
-                        <p className="text-center text-sm text-gray-500">
-                            ¿Necesitas más ayuda? Contacta a soporte en <a href="#" className="text-blue-500 hover:underline">soporte@creadorhorarios.com</a>
-                        </p>
-                    </section>
-
                 </div>
 
                 {/* Footer */}

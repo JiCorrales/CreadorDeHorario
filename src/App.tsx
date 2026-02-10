@@ -182,6 +182,7 @@ function App() {
               <ScheduleView
                 schedule={currentSchedule}
                 onRemoveCourse={handleUnscheduleFromView}
+                onEditCourse={handleEditCourse}
               />
 
               <CourseTable

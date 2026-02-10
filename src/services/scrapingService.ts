@@ -1,5 +1,5 @@
 import { Course, CourseSession, CourseStatus } from '../types';
-import { generateId } from '../utils';
+import { generateId, DEFAULT_COURSE_COLOR } from '../utils';
 
 export interface ScrapedCourse extends Omit<Course, 'id' | 'isScheduled'> {
     originalCode: string; // To help grouping
@@ -35,7 +35,7 @@ export const parseTecHtml = (htmlContent: string): ScrapedCourse[] => {
     for (let i = 0; i < rows.length; i++) {
         const row = rows[i];
         const id = row.id;
-        
+
         // Skip if it's a detail row or has no ID
         if (!id || id.startsWith('trH')) continue;
 
@@ -56,19 +56,19 @@ export const parseTecHtml = (htmlContent: string): ScrapedCourse[] => {
         if (detailRow) {
             // Parse groups from the detail row
             const groupRows = Array.from(detailRow.querySelectorAll('.tableHorarios tbody tr'));
-            
+
             groupRows.forEach(gRow => {
                 const campus = gRow.querySelector('.colHoSede')?.textContent?.trim() || '';
                 const group = gRow.querySelector('.colHoGrupo')?.textContent?.trim() || '';
                 const professorRaw = gRow.querySelector('.colHoProfesor')?.innerHTML || '';
                 const professor = professorRaw.split('<br>')[0].trim(); // Take first line or clean up
-                
+
                 const quotaCell = gRow.querySelector('.colHoCupo span');
                 const quota = parseInt(quotaCell?.textContent?.trim() || '0');
-                
+
                 const reservedCell = gRow.querySelector('.colHoReservado');
                 const reserved = reservedCell?.textContent?.trim().toLowerCase() === 'sí';
-                
+
                 const statusCell = gRow.querySelector('.colHoEstado');
                 const statusText = statusCell?.textContent?.trim() || 'Presencial';
                 const status: CourseStatus = STATUS_MAP[statusText] || 'Presencial';
@@ -76,15 +76,15 @@ export const parseTecHtml = (htmlContent: string): ScrapedCourse[] => {
                 // Parse Schedule
                 const scheduleCell = gRow.querySelector('.colHoHorario');
                 const sessions: CourseSession[] = [];
-                
+
                 if (scheduleCell) {
                     const html = scheduleCell.innerHTML;
                     const parts = html.split('<br>').map(p => p.trim()).filter(p => p);
-                    
+
                     // Iterate parts to find time patterns
                     // Pattern: "L 07:30-10:20"
                     const timeRegex = /([LKMJVSD])\s+(\d{1,2}:\d{2})-(\d{1,2}:\d{2})/;
-                    
+
                     for (let j = 0; j < parts.length; j++) {
                         const match = parts[j].match(timeRegex);
                         if (match) {
@@ -93,9 +93,9 @@ export const parseTecHtml = (htmlContent: string): ScrapedCourse[] => {
                             let classroom = 'Sin aula';
                             if (j + 1 < parts.length && !parts[j+1].match(timeRegex)) {
                                 classroom = parts[j+1];
-                                // Skip the classroom part in next iteration? 
+                                // Skip the classroom part in next iteration?
                                 // Actually the loop will just check it and fail regex, which is fine.
-                                // But if we consume it, we should maybe increment j. 
+                                // But if we consume it, we should maybe increment j.
                                 // However, simple iteration is safer.
                             }
 
@@ -120,7 +120,8 @@ export const parseTecHtml = (htmlContent: string): ScrapedCourse[] => {
                     quota: quota,
                     reserved: reserved,
                     status: status,
-                    sessions: sessions
+                    sessions: sessions,
+                    color: DEFAULT_COURSE_COLOR
                 });
             });
         }

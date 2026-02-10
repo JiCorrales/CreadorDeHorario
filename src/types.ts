@@ -20,6 +20,7 @@ export interface Course {
   status: CourseStatus;
   sessions: CourseSession[]; // Changed from flat structure to sessions array
   isScheduled: boolean; // New field for pending/scheduled state
+  color?: string; // Hex color for the course
 }
 
 export interface Schedule {

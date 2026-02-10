@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
-import { Schedule } from '../types';
-import { DAYS } from '../utils';
+import { Schedule, Course } from '../types';
+import { DAYS, hexToRgba, hexToRgb, DEFAULT_COURSE_COLOR } from '../utils';
 import { Trash2, FileDown, Table, LayoutGrid } from 'lucide-react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -10,29 +10,14 @@ import { saveAs } from 'file-saver';
 interface ScheduleViewProps {
   schedule: Schedule;
   onRemoveCourse: (courseId: string) => void;
+  onEditCourse: (course: Course) => void;
 }
 
 const START_HOUR = 7;
 const END_HOUR = 23;
 const HOUR_HEIGHT = 60; // px
 
-// Pastel colors for courses
-const COURSE_COLORS = [
-  [255, 200, 200], // Red
-  [200, 255, 200], // Green
-  [200, 200, 255], // Blue
-  [255, 255, 200], // Yellow
-  [255, 200, 255], // Magenta
-  [200, 255, 255], // Cyan
-  [255, 220, 200], // Orange
-  [220, 200, 255], // Purple
-  [255, 218, 185], // Peach
-  [152, 251, 152], // PaleGreen
-  [135, 206, 250], // LightSkyBlue
-  [255, 240, 245], // LavenderBlush
-];
-
-const ScheduleView: React.FC<ScheduleViewProps> = ({ schedule, onRemoveCourse }) => {
+const ScheduleView: React.FC<ScheduleViewProps> = ({ schedule, onRemoveCourse, onEditCourse }) => {
   const [showExportMenu, setShowExportMenu] = useState(false);
 
   const parseTime = (time: string) => {
@@ -164,17 +149,22 @@ const ScheduleView: React.FC<ScheduleViewProps> = ({ schedule, onRemoveCourse })
     // Draw Courses
     const scheduledCourses = schedule.courses.filter(c => c.isScheduled);
 
-    scheduledCourses.forEach((course, index) => {
-        // Assign color based on index
-        const color = COURSE_COLORS[index % COURSE_COLORS.length];
+    scheduledCourses.forEach((course) => {
+        // Assign color based on course color or default
+        const hexColor = course.color || DEFAULT_COURSE_COLOR;
+        const rgbColor = hexToRgb(hexColor);
+
+        // We use a lighter version for background in PDF to ensure text readability?
+        // Or we just use the color. The user sees a preview.
+        // If the color is dark, text should be white.
+        // For simplicity in PDF, let's just use the color.
 
         course.sessions.forEach(session => {
             // Ensure color is set correctly for EACH session block
-            // because subsequent operations (setTextColor) might affect state depending on library version
-            if (color) {
-                 doc.setFillColor(color[0], color[1], color[2]);
+            if (rgbColor) {
+                 doc.setFillColor(rgbColor.r, rgbColor.g, rgbColor.b);
             } else {
-                 doc.setFillColor(230, 230, 230);
+                 doc.setFillColor(200, 200, 200);
             }
 
             const dayIndex = DAYS.indexOf(session.day);
@@ -350,34 +340,49 @@ const ScheduleView: React.FC<ScheduleViewProps> = ({ schedule, onRemoveCourse })
                 const colWidth = 100 / 8; // 8 columns (1 time + 7 days)
                 const left = (dayIndex + 1) * colWidth; // +1 to skip Time column
 
+                const courseColor = course.color || DEFAULT_COURSE_COLOR;
+                const bgColor = hexToRgba(courseColor, 0.15);
+
                 return (
                   <div
                     key={session.id}
-                    className="absolute bg-blue-100 dark:bg-blue-900/50 border-l-4 border-blue-500 dark:border-blue-400 rounded p-1 overflow-hidden hover:z-10 hover:shadow-lg transition-all group"
+                    className="absolute border-l-4 rounded p-1 overflow-hidden hover:z-10 hover:shadow-lg transition-all group cursor-pointer"
+                    onClick={() => onEditCourse(course)}
                     style={{
                       ...style,
                       left: `${left}%`,
                       width: `${colWidth - 0.5}%`, // slightly smaller for gap
-                      marginLeft: '0.25%'
+                      marginLeft: '0.25%',
+                      backgroundColor: bgColor,
+                      borderLeftColor: courseColor
                     }}
+                    title="Haga clic para editar"
                   >
                     <div className="flex justify-between items-start">
-                      <div className="font-bold text-xs text-blue-800 dark:text-blue-200 truncate" title={course.name}>{course.name}</div>
+                      <div
+                        className="font-bold text-xs truncate"
+                        style={{ color: courseColor }} // Use the course color for the title
+                      >
+                        {course.name}
+                      </div>
                       <button
-                        onClick={() => onRemoveCourse(course.id)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onRemoveCourse(course.id);
+                        }}
                         className="text-red-400 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300 opacity-0 group-hover:opacity-100 transition-opacity"
                         title="Quitar del horario"
                       >
                         <Trash2 className="w-3 h-3" />
                       </button>
                     </div>
-                    <div className="text-[10px] font-semibold text-blue-900 dark:text-blue-100 leading-tight">
+                    <div className="text-[10px] font-semibold text-gray-700 dark:text-gray-200 leading-tight">
                       {session.startTime} - {session.endTime}
                     </div>
-                    <div className="text-[10px] text-blue-700 dark:text-blue-300 leading-tight">
+                    <div className="text-[10px] text-gray-600 dark:text-gray-300 leading-tight">
                       {session.classroom} - {course.group}
                     </div>
-                    <div className="text-[10px] text-blue-600 dark:text-blue-400 truncate">
+                    <div className="text-[10px] text-gray-500 dark:text-gray-400 truncate">
                       {course.professor}
                     </div>
                   </div>

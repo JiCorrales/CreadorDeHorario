@@ -14,9 +14,10 @@ Por seguridad, los navegadores impiden que el Creador de Horarios acceda directa
 
 ¿CÓMO SE USA?
 1. Entra a la página de matrícula del TEC y busca tus cursos.
-2. Haz clic en el ícono de la extensión (cuadro azul) en la barra de tu navegador.
-3. Presiona el botón "Copiar Datos al Portapapeles".
-4. Ve al Creador de Horarios -> Importar -> Pegar Código -> Ctrl+V.
+2. Primero haz clic en cada curso de la página de matrícula para desplegar su lista de horarios disponibles; asegúrate de que todos los horarios se hayan cargado en la página y estén presentes.
+3. Haz clic en el ícono de la extensión (cuadro azul) en la barra de tu navegador.
+4. Presiona el botón "Copiar Datos al Portapapeles".
+5. Ve al Creador de Horarios -> Importar -> Pegar Código -> Ctrl+V.
 
 PRIVACIDAD
 La extensión funciona 100% local en tu navegador. No envía tus datos a nadie; solo los mueve de la pestaña del TEC a tu portapapeles para que tú los uses.

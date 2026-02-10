@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Course, CourseStatus, CourseSession } from '../types';
-import { generateId, DAYS, STATUSES } from '../utils';
-import { PlusCircle, Clock, MapPin, Save, X, Edit } from 'lucide-react';
+import { generateId, DAYS, STATUSES, PREDEFINED_COLORS, DEFAULT_COURSE_COLOR, isValidHex, hexToRgb } from '../utils';
+import { PlusCircle, Clock, MapPin, Save, X, Edit, Palette, ChevronDown, ChevronUp, Check } from 'lucide-react';
 import TimeInput from './TimeInput';
 
 interface CourseFormProps {
@@ -25,6 +25,9 @@ const CourseForm: React.FC<CourseFormProps> = ({
   const [quota, setQuota] = useState(0);
   const [reserved, setReserved] = useState(false);
   const [status, setStatus] = useState<CourseStatus>('Presencial');
+  const [color, setColor] = useState(DEFAULT_COURSE_COLOR);
+  const [showColorPicker, setShowColorPicker] = useState(false);
+  const [rgb, setRgb] = useState({ r: 0, g: 102, b: 204 }); // Default blue RGB
 
   const [frequency, setFrequency] = useState<1 | 2>(1);
   const [sessions, setSessions] = useState<Omit<CourseSession, 'id'>[]>([
@@ -43,6 +46,11 @@ const CourseForm: React.FC<CourseFormProps> = ({
       setReserved(courseToEdit.reserved);
       setStatus(courseToEdit.status);
 
+      const courseColor = courseToEdit.color || DEFAULT_COURSE_COLOR;
+      setColor(courseColor);
+      const rgbVal = hexToRgb(courseColor);
+      if (rgbVal) setRgb(rgbVal);
+
       const sessionCount = courseToEdit.sessions.length;
       setFrequency(sessionCount > 1 ? 2 : 1);
 
@@ -54,6 +62,29 @@ const CourseForm: React.FC<CourseFormProps> = ({
       resetForm();
     }
   }, [courseToEdit]);
+
+  // Update RGB when color changes (only if it's a valid hex)
+  const handleColorChange = (newColor: string) => {
+    setColor(newColor);
+    if (isValidHex(newColor)) {
+      const rgbVal = hexToRgb(newColor);
+      if (rgbVal) setRgb(rgbVal);
+    }
+  };
+
+  // Update Hex when RGB changes
+  const handleRgbChange = (field: 'r' | 'g' | 'b', value: string) => {
+    const numValue = Math.min(255, Math.max(0, parseInt(value) || 0));
+    const newRgb = { ...rgb, [field]: numValue };
+    setRgb(newRgb);
+
+    const toHex = (n: number) => {
+      const hex = n.toString(16);
+      return hex.length === 1 ? '0' + hex : hex;
+    };
+
+    setColor(`#${toHex(newRgb.r)}${toHex(newRgb.g)}${toHex(newRgb.b)}`.toUpperCase());
+  };
 
   // Adjust sessions when frequency changes manually
   useEffect(() => {
@@ -84,6 +115,10 @@ const CourseForm: React.FC<CourseFormProps> = ({
     setQuota(0);
     setReserved(false);
     setStatus('Presencial');
+    setColor(DEFAULT_COURSE_COLOR);
+    const rgbVal = hexToRgb(DEFAULT_COURSE_COLOR);
+    if (rgbVal) setRgb(rgbVal);
+    setShowColorPicker(false);
     setFrequency(1);
     setSessions([{ day: 'Lunes', startTime: '', endTime: '', classroom: '' }]);
   };
@@ -151,6 +186,7 @@ const CourseForm: React.FC<CourseFormProps> = ({
       quota,
       reserved,
       status,
+      color: isValidHex(color) ? color : DEFAULT_COURSE_COLOR,
       isScheduled: courseToEdit ? courseToEdit.isScheduled : false, // Keep scheduled status if editing
       sessions: finalSessions
     };
@@ -276,6 +312,120 @@ const CourseForm: React.FC<CourseFormProps> = ({
             Reservado
           </label>
         </div>
+      </div>
+
+      {/* Color Selection */}
+      <div className="border-t border-gray-200 dark:border-gray-700 pt-4 mb-4">
+        <button
+          type="button"
+          onClick={() => setShowColorPicker(!showColorPicker)}
+          className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors focus:outline-none"
+        >
+          <Palette className="w-4 h-4" />
+          Cambiar color del curso
+          {showColorPicker ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+          <div 
+            className="w-4 h-4 rounded-full border border-gray-300 dark:border-gray-600 ml-2" 
+            style={{ backgroundColor: color }}
+            title="Color actual"
+          ></div>
+        </button>
+
+        {showColorPicker && (
+          <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600 animate-fadeIn">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Palette */}
+              <div>
+                <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-wider">
+                  Paleta de Colores
+                </label>
+                <div className="grid grid-cols-5 gap-2">
+                  {PREDEFINED_COLORS.map((c) => (
+                    <button
+                      key={c}
+                      type="button"
+                      onClick={() => handleColorChange(c)}
+                      className={`w-8 h-8 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-transform hover:scale-110 flex items-center justify-center ${
+                        color === c ? 'ring-2 ring-offset-2 ring-blue-500 dark:ring-offset-gray-800' : ''
+                      }`}
+                      style={{ backgroundColor: c }}
+                      title={c}
+                    >
+                      {color === c && <Check className="w-4 h-4 text-white drop-shadow-md" />}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Custom Color Inputs & Preview */}
+              <div className="space-y-4">
+                <div>
+                   <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-wider">
+                    Personalizar
+                  </label>
+                  <div className="flex gap-4 items-center">
+                    {/* Preview */}
+                    <div 
+                        className="w-16 h-16 rounded-lg shadow-sm border border-gray-200 dark:border-gray-600 flex-shrink-0 transition-colors duration-300"
+                        style={{ backgroundColor: color }}
+                    ></div>
+                    
+                    <div className="flex-1 space-y-2">
+                        {/* Hex Input */}
+                        <div className="flex items-center gap-2">
+                            <span className="text-xs text-gray-500 dark:text-gray-400 w-8">HEX</span>
+                            <div className="relative flex-1">
+                                <span className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-500">#</span>
+                                <input
+                                    type="text"
+                                    value={color.replace('#', '')}
+                                    onChange={(e) => handleColorChange(`#${e.target.value}`)}
+                                    maxLength={6}
+                                    className="w-full pl-6 pr-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white dark:bg-gray-700 dark:text-white uppercase font-mono"
+                                />
+                            </div>
+                        </div>
+                        
+                        {/* RGB Inputs */}
+                        <div className="flex items-center gap-2">
+                             <span className="text-xs text-gray-500 dark:text-gray-400 w-8">RGB</span>
+                             <div className="grid grid-cols-3 gap-2 flex-1">
+                                <input
+                                    type="number"
+                                    value={rgb.r}
+                                    onChange={(e) => handleRgbChange('r', e.target.value)}
+                                    min="0"
+                                    max="255"
+                                    className="w-full px-1 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white dark:bg-gray-700 dark:text-white text-center"
+                                    title="Red"
+                                />
+                                <input
+                                    type="number"
+                                    value={rgb.g}
+                                    onChange={(e) => handleRgbChange('g', e.target.value)}
+                                    min="0"
+                                    max="255"
+                                    className="w-full px-1 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white dark:bg-gray-700 dark:text-white text-center"
+                                    title="Green"
+                                />
+                                <input
+                                    type="number"
+                                    value={rgb.b}
+                                    onChange={(e) => handleRgbChange('b', e.target.value)}
+                                    min="0"
+                                    max="255"
+                                    className="w-full px-1 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white dark:bg-gray-700 dark:text-white text-center"
+                                    title="Blue"
+                                />
+                             </div>
+                        </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Frequency and Sessions */}
