@@ -383,10 +383,24 @@ const CourseForm: React.FC<CourseFormProps> = ({
                   </label>
                   <div className="flex gap-4 items-center">
                     {/* Preview */}
-                    <div
-                        className="w-16 h-16 rounded-lg shadow-sm border border-gray-200 dark:border-gray-600 flex-shrink-0 transition-colors duration-300"
-                        style={{ backgroundColor: color }}
-                    ></div>
+                    <div className="relative group cursor-pointer">
+                      <div
+                          className="w-16 h-16 rounded-lg shadow-sm border border-gray-200 dark:border-gray-600 flex-shrink-0 transition-colors duration-300"
+                          style={{ backgroundColor: color }}
+                          onClick={() => document.getElementById('native-color-picker')?.click()}
+                          title="Click para abrir selector de color"
+                      ></div>
+                       <input
+                          id="native-color-picker"
+                          type="color"
+                          value={color}
+                          onChange={(e) => handleColorChange(e.target.value)}
+                          className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
+                         <Palette className="w-6 h-6 text-white drop-shadow-md" />
+                      </div>
+                    </div>
 
                     <div className="flex-1 space-y-2">
                         {/* Hex Input */}

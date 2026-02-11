@@ -53,7 +53,10 @@ const CourseTable: React.FC<CourseTableProps> = ({
 
   // Master checkbox logic
   const handleSelectAll = () => {
-    if (selectedCourseIds.size === sortedAndFilteredCourses.length) {
+    // If any courses are selected (whether all or just some), clicking the master checkbox
+    // should deselect all. This is a common pattern that prevents accidental "Select All"
+    // when the user intends to clear the current selection.
+    if (selectedCourseIds.size > 0) {
       setSelectedCourseIds(new Set());
     } else {
       setSelectedCourseIds(new Set(sortedAndFilteredCourses.map(c => c.id)));
@@ -253,7 +256,8 @@ const CourseTable: React.FC<CourseTableProps> = ({
                     checked={isAllSelected}
                     ref={input => { if (input) input.indeterminate = isIndeterminate; }}
                     onChange={handleSelectAll}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded dark:bg-gray-700 dark:border-gray-600 dark:focus:ring-offset-gray-800"
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded dark:bg-gray-700 dark:border-gray-600 dark:focus:ring-offset-gray-800 cursor-pointer"
+                    title={selectedCount > 0 ? "Deseleccionar todos" : "Seleccionar todos"}
                 />
               </th>
               <th
