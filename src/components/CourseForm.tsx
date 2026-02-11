@@ -9,13 +9,15 @@ interface CourseFormProps {
   onUpdateCourse: (course: Course) => void;
   onCancelEdit: () => void;
   courseToEdit?: Course | null;
+  setIsDirty?: (isDirty: boolean) => void;
 }
 
 const CourseForm: React.FC<CourseFormProps> = ({
   onAddCourse,
   onUpdateCourse,
   onCancelEdit,
-  courseToEdit
+  courseToEdit,
+  setIsDirty
 }) => {
   const [name, setName] = useState('');
   const [campus, setCampus] = useState('');
@@ -105,6 +107,32 @@ const CourseForm: React.FC<CourseFormProps> = ({
         }
     });
   }, [frequency]);
+
+  // Check for unsaved changes
+  useEffect(() => {
+    if (!setIsDirty) return;
+
+    if (!courseToEdit) {
+        // If not editing, we don't track dirty state for this specific requirement
+        // or we could track it for "Add New" as well, but let's stick to requirements
+        return;
+    }
+
+    const isModified =
+        name !== courseToEdit.name ||
+        campus !== courseToEdit.campus ||
+        group !== courseToEdit.group ||
+        professor !== courseToEdit.professor ||
+        credits !== (courseToEdit.credits || 0) ||
+        quota !== courseToEdit.quota ||
+        reserved !== courseToEdit.reserved ||
+        status !== courseToEdit.status ||
+        color !== (courseToEdit.color || DEFAULT_COURSE_COLOR) ||
+        frequency !== courseToEdit.sessions.length ||
+        JSON.stringify(sessions) !== JSON.stringify(courseToEdit.sessions.map(({ day, startTime, endTime, classroom }) => ({ day, startTime, endTime, classroom })));
+
+    setIsDirty(isModified);
+  }, [name, campus, group, professor, credits, quota, reserved, status, color, frequency, sessions, courseToEdit, setIsDirty]);
 
   const resetForm = () => {
     setName('');
@@ -206,16 +234,6 @@ const CourseForm: React.FC<CourseFormProps> = ({
           {courseToEdit ? <Edit className="w-5 h-5" /> : <PlusCircle className="w-5 h-5" />}
           {courseToEdit ? 'Editar Curso' : 'Agregar Nuevo Curso'}
         </h2>
-        {courseToEdit && (
-            <button
-                type="button"
-                onClick={onCancelEdit}
-                className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-                title="Cancelar Edición"
-            >
-                <X className="w-5 h-5" />
-            </button>
-        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">

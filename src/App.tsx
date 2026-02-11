@@ -50,6 +50,7 @@ function App() {
 
   const [error, setError] = useState<string | null>(null);
   const [courseToEdit, setCourseToEdit] = useState<Course | null>(null);
+  const [isFormDirty, setIsFormDirty] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isHtmlImportOpen, setIsHtmlImportOpen] = useState(false);
   const [isManualOpen, setIsManualOpen] = useState(false);
@@ -60,6 +61,19 @@ function App() {
       createSchedule('Mi Horario');
     }
   }, [schedules.length, createSchedule]);
+
+  // Handle unsaved changes warning on page reload/close
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+        if (isFormDirty) {
+            e.preventDefault();
+            e.returnValue = '';
+        }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [isFormDirty]);
 
   const handleAddCourse = (course: Course) => {
     try {
@@ -82,6 +96,7 @@ function App() {
       }
       updateCourse(course);
       setCourseToEdit(null); // Exit edit mode
+      setIsFormDirty(false);
     } catch (err: any) {
       setError(err.message);
       setTimeout(() => setError(null), 5000);
@@ -90,10 +105,19 @@ function App() {
 
   const handleEditCourse = (course: Course) => {
     setCourseToEdit(course);
+    setIsFormDirty(false); // Reset dirty state when opening edit
   };
 
   const handleCancelEdit = () => {
-    setCourseToEdit(null);
+    if (isFormDirty) {
+        if (window.confirm("¿Está seguro de que desea salir? Los cambios no guardados se perderán")) {
+            setCourseToEdit(null);
+            setIsFormDirty(false);
+        }
+    } else {
+        setCourseToEdit(null);
+        setIsFormDirty(false);
+    }
   };
 
   const handleToggleStatus = (courseId: string) => {
@@ -262,6 +286,7 @@ function App() {
               onUpdateCourse={handleUpdateCourse}
               onCancelEdit={handleCancelEdit}
               courseToEdit={courseToEdit}
+              setIsDirty={setIsFormDirty}
             />
           )}
         </Modal>

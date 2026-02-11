@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, BookOpen, CheckCircle, AlertCircle, HelpCircle, FileText, Download, Calendar } from 'lucide-react';
+import { X, BookOpen, CheckCircle, AlertCircle, HelpCircle, FileText, Download, Import, Calendar } from 'lucide-react';
 import Scrollable from './Scrollable';
 
 interface UserManualModalProps {
@@ -60,7 +60,7 @@ const UserManualModal: React.FC<UserManualModalProps> = ({ isOpen, onClose }) =>
                                     <FileText className="w-4 h-4" /> Paso 2: Importar
                                 </div>
                                 <p className="text-sm">
-                                    Haz clic en el botón de importar <FileText className="w-3 h-3 inline"/> en esta página. Pega el código o sube el archivo para cargar tus cursos disponibles.
+                                    Haz clic en el botón de importar <Import className="w-3 h-3 inline"/> en esta página. Pega el código o sube el archivo para cargar tus cursos disponibles.
                                 </p>
                             </div>
 

@@ -2,6 +2,16 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Enable native dark mode for form controls (scrollbars, checkboxes, etc.) */
+html.dark {
+  color-scheme: dark;
+}
+
+/* Force accent color for checkboxes in dark mode to match theme */
+.dark input[type="checkbox"] {
+  accent-color: #2563eb;
+}
+
 /* Ensure inputs are visible in fullscreen */
 input, select, textarea {
   @apply text-gray-800 dark:text-white bg-white dark:bg-gray-800;
