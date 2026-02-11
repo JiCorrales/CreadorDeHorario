@@ -28,8 +28,8 @@ export const parseTecHtml = (htmlContent: string): ScrapedCourse[] => {
     const doc = parser.parseFromString(htmlContent, 'text/html');
 
     // Detect if it is the Student Profile (Expediente) or Matricula
-    // The profile has div elements with class 'window_pg' for courses
-    const isStudentProfile = doc.querySelectorAll('.window_pg').length > 0;
+    // The profile has div elements with class 'window_pg' OR the specific schedule table
+    const isStudentProfile = doc.querySelectorAll('.window_pg').length > 0 || doc.getElementById('t_guia_horario') !== null;
 
     if (isStudentProfile) {
         return parseStudentProfile(doc);
@@ -137,7 +137,7 @@ const parseMatricula = (doc: Document): ScrapedCourse[] => {
 };
 
 const parseStudentProfile = (doc: Document): ScrapedCourse[] => {
-    const courses: ScrapedCourse[] = [];
+    const courseMap = new Map<string, ScrapedCourse>();
     const rows = Array.from(doc.querySelectorAll('#t_guia_horario table tbody tr'));
 
     rows.forEach(row => {
@@ -156,14 +156,43 @@ const parseStudentProfile = (doc: Document): ScrapedCourse[] => {
         const status: CourseStatus = STATUS_MAP[statusText] || 'Presencial';
         const reserved = cells[10]?.textContent?.trim() === '1';
 
+        const courseKey = `${code}-${group}`;
+
+        // Get or create course
+        let course = courseMap.get(courseKey);
+        if (!course) {
+            course = {
+                originalCode: code,
+                name: name,
+                campus: 'Cartago', // Default fallback
+                group: group,
+                professor: professor,
+                credits: credits,
+                quota: quota,
+                reserved: reserved,
+                status: status,
+                sessions: [],
+                color: DEFAULT_COURSE_COLOR
+            };
+            courseMap.set(courseKey, course);
+        }
+
+        // Handle professor merging (avoid duplicates)
+        if (course.professor !== professor && !course.professor.includes(professor)) {
+            // Check if professor is not already in the string (simple check)
+            // A better way would be splitting by comma, checking, and joining
+            const currentProfs = course.professor.split(',').map(p => p.trim());
+            if (!currentProfs.includes(professor)) {
+                course.professor = `${course.professor}, ${professor}`;
+            }
+        }
+
         // Parse Schedule
         // Format example: "Martes - 9:30:11:20"
-        const sessions: CourseSession[] = [];
         if (scheduleText) {
             const parts = scheduleText.split('-').map(p => p.trim());
             if (parts.length >= 2) {
                 const dayName = parts[0]; // e.g., "Martes"
-                // The time part might be "9:30:11:20"
                 const timePart = parts[1];
 
                 // Regex to match H:MM:H:MM or HH:MM:HH:MM
@@ -174,31 +203,26 @@ const parseStudentProfile = (doc: Document): ScrapedCourse[] => {
                     const startTime = `${startH.padStart(2, '0')}:${startM}`;
                     const endTime = `${endH.padStart(2, '0')}:${endM}`;
 
-                    sessions.push({
-                        id: generateId(),
-                        day: dayName,
-                        startTime: startTime,
-                        endTime: endTime,
-                        classroom: classroom
-                    });
+                    // Check for duplicate session (same day, same time)
+                    const isDuplicate = course.sessions.some(s =>
+                        s.day === dayName &&
+                        s.startTime === startTime &&
+                        s.endTime === endTime
+                    );
+
+                    if (!isDuplicate) {
+                        course.sessions.push({
+                            id: generateId(),
+                            day: dayName,
+                            startTime: startTime,
+                            endTime: endTime,
+                            classroom: classroom
+                        });
+                    }
                 }
             }
         }
-
-        courses.push({
-            originalCode: code,
-            name: name,
-            campus: 'Cartago', // Default fallback
-            group: group,
-            professor: professor,
-            credits: credits,
-            quota: quota,
-            reserved: reserved,
-            status: status,
-            sessions: sessions,
-            color: DEFAULT_COURSE_COLOR
-        });
     });
 
-    return courses;
+    return Array.from(courseMap.values());
 };

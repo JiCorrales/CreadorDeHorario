@@ -110,13 +110,15 @@ const CourseForm: React.FC<CourseFormProps> = ({
   };
 
   // Adjust sessions when frequency changes
-  useEffect(() => {
-    setSessions(prev => {
-        if (prev.length === frequency) return prev;
+  const handleFrequencyChange = (newFrequency: number) => {
+    setFrequency(newFrequency);
 
-        if (prev.length < frequency) {
+    setSessions(prev => {
+        if (prev.length === newFrequency) return prev;
+
+        if (prev.length < newFrequency) {
             // Add needed sessions
-            const countToAdd = frequency - prev.length;
+            const countToAdd = newFrequency - prev.length;
             const newSessions = [...prev];
             for (let i = 0; i < countToAdd; i++) {
                 newSessions.push({ day: 'Lunes', startTime: '', endTime: '', classroom: '' });
@@ -124,10 +126,10 @@ const CourseForm: React.FC<CourseFormProps> = ({
             return newSessions;
         } else {
             // Remove extra sessions
-            return prev.slice(0, frequency);
+            return prev.slice(0, newFrequency);
         }
     });
-  }, [frequency]);
+  };
 
   // Check for unsaved changes
   useEffect(() => {
@@ -541,7 +543,7 @@ const CourseForm: React.FC<CourseFormProps> = ({
              <select
                 id="frequency-select"
                 value={frequency}
-                onChange={(e) => setFrequency(parseInt(e.target.value))}
+                onChange={(e) => handleFrequencyChange(parseInt(e.target.value))}
                 className="w-24 h-9 px-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white dark:bg-gray-700 dark:text-white"
              >
                 {Array.from({ length: 7 }, (_, i) => i + 1).map(num => (
