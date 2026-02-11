@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { useOverlayScrollbars } from 'overlayscrollbars-react';
+import { twMerge } from 'tailwind-merge';
 import 'overlayscrollbars/overlayscrollbars.css';
 
 interface ScrollableProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -30,7 +31,12 @@ const Scrollable: React.FC<ScrollableProps> = ({ children, className, options, .
   }, [initialize]);
 
   return (
-    <div ref={ref} className={className} style={{ width: '100%' }} {...props}>
+    <div 
+      ref={ref} 
+      className={twMerge("overflow-x-auto", className)} 
+      style={{ width: '100%' }} 
+      {...props}
+    >
       {children}
     </div>
   );

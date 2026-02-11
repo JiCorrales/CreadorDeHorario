@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Course } from '../types';
 import { Trash2, CalendarPlus, Edit, ChevronDown, ChevronUp, Search, Download } from 'lucide-react';
 import Scrollable from './Scrollable';
+import ConfirmationModal from './ConfirmationModal';
 
 interface CourseTableProps {
   courses: Course[];
@@ -25,6 +26,7 @@ const CourseTable: React.FC<CourseTableProps> = ({
   const [filter, setFilter] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [selectedCourseIds, setSelectedCourseIds] = useState<Set<string>>(new Set());
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   // derived state for conflicts
   const [conflictIds] = useState<Set<string>>(new Set());
@@ -180,9 +182,8 @@ const CourseTable: React.FC<CourseTableProps> = ({
 
                 <button
                     onClick={() => {
-                        if (selectedCount > 0 && onBulkDelete && window.confirm(`¿Estás seguro de eliminar ${selectedCount} cursos?`)) {
-                            onBulkDelete(Array.from(selectedCourseIds));
-                            setSelectedCourseIds(new Set());
+                        if (selectedCount > 0) {
+                            setIsDeleteModalOpen(true);
                         }
                     }}
                     disabled={selectedCount === 0}
@@ -245,12 +246,26 @@ const CourseTable: React.FC<CourseTableProps> = ({
         </div>
       </div>
 
+      <ConfirmationModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={() => {
+          if (onBulkDelete) {
+            onBulkDelete(Array.from(selectedCourseIds));
+            setSelectedCourseIds(new Set());
+          }
+          setIsDeleteModalOpen(false);
+        }}
+        title="Eliminar Cursos"
+        message={`¿Estás seguro de que deseas eliminar ${selectedCount} curso(s)? Esta acción no se puede deshacer.`}
+      />
+
       <div className="w-full">
         <Scrollable className="w-full">
           <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
           <thead className="bg-gray-50 dark:bg-gray-700">
             <tr>
-              <th scope="col" className="w-10 px-6 py-3">
+              <th scope="col" className="w-10 px-3 py-3">
                 <input
                     type="checkbox"
                     checked={isAllSelected}
@@ -262,7 +277,7 @@ const CourseTable: React.FC<CourseTableProps> = ({
               </th>
               <th
                 scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
                 onClick={() => handleSort('name')}
               >
                 <div className="flex items-center gap-1">
@@ -270,19 +285,19 @@ const CourseTable: React.FC<CourseTableProps> = ({
                   {sortField === 'name' && (sortDirection === 'asc' ? <ChevronUp className="w-3 h-3"/> : <ChevronDown className="w-3 h-3"/>)}
                 </div>
               </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+              <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                 Sede
               </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                Créditos
-              </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+              <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                 Horario
               </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+              <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                 Profesor
               </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+              <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                Modalidad
+              </th>
+              <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                 Estado
               </th>
             </tr>
@@ -290,7 +305,7 @@ const CourseTable: React.FC<CourseTableProps> = ({
           <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
             {sortedAndFilteredCourses.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-6 py-4 text-center text-sm text-gray-500 dark:text-gray-400">
+                <td colSpan={6} className="px-3 py-4 text-center text-sm text-gray-500 dark:text-gray-400">
                   {filter ? 'No se encontraron cursos que coincidan con la búsqueda.' : 'No hay cursos registrados.'}
                 </td>
               </tr>
@@ -301,7 +316,7 @@ const CourseTable: React.FC<CourseTableProps> = ({
                     className={`hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer ${selectedCourseIds.has(course.id) ? 'bg-blue-50 dark:bg-blue-900/20' : ''} ${conflictIds.has(course.id) ? 'border-l-4 border-red-500' : ''}`}
                     onClick={() => handleSelectOne(course.id)}
                 >
-                  <td className="px-6 py-4">
+                  <td className="px-3 py-4">
                     <input
                         type="checkbox"
                         checked={selectedCourseIds.has(course.id)}
@@ -310,7 +325,7 @@ const CourseTable: React.FC<CourseTableProps> = ({
                         onClick={(e) => e.stopPropagation()}
                     />
                   </td>
-                  <td className="px-6 py-4">
+                  <td className="px-3 py-4">
                     <div className="flex flex-col">
                       <span className="text-sm font-medium text-gray-900 dark:text-white">
                           {formatTextAsList(course.name, 25)}
@@ -318,13 +333,10 @@ const CourseTable: React.FC<CourseTableProps> = ({
                       <span className="text-xs text-gray-500 dark:text-gray-400 mt-1">Grupo: {course.group}</span>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
-                    {course.campus}
+                  <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
+                    {formatTextAsList(course.campus, 20)}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300 text-center">
-                    {course.credits}
-                  </td>
-                  <td className="px-6 py-4">
+                  <td className="px-3 py-4">
                     <div className="text-sm text-gray-900 dark:text-gray-300 space-y-1">
                       {course.sessions.map((session, idx) => (
                         <div key={idx} className="flex gap-2 text-xs whitespace-nowrap">
@@ -335,10 +347,13 @@ const CourseTable: React.FC<CourseTableProps> = ({
                       ))}
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-300">
+                  <td className="px-3 py-4 text-sm text-gray-500 dark:text-gray-300">
                     {formatTextAsList(course.professor, 20)}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
+                    {formatTextAsList(course.status, 20)}
+                  </td>
+                  <td className="px-3 py-4 whitespace-nowrap">
                     {getStatusBadge(course.isScheduled)}
                   </td>
                 </tr>

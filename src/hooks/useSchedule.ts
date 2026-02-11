@@ -117,7 +117,7 @@ export const useSchedule = () => {
   const addCourse = (course: Course) => {
     if (!currentScheduleId) return;
 
-    setSchedules(schedules.map(s => {
+    setSchedules(prevSchedules => prevSchedules.map(s => {
       if (s.id === currentScheduleId) {
         return {
           ...s,
@@ -131,7 +131,7 @@ export const useSchedule = () => {
   const addCourses = (newCourses: Course[]) => {
     if (!currentScheduleId) return;
 
-    setSchedules(schedules.map(s => {
+    setSchedules(prevSchedules => prevSchedules.map(s => {
       if (s.id === currentScheduleId) {
         return {
           ...s,
@@ -145,7 +145,7 @@ export const useSchedule = () => {
   const updateCourse = (updatedCourse: Course) => {
     if (!currentScheduleId) return;
 
-    setSchedules(schedules.map(s => {
+    setSchedules(prevSchedules => prevSchedules.map(s => {
       if (s.id === currentScheduleId) {
         if (updatedCourse.isScheduled) {
            const otherCourses = s.courses.filter(c => c.id !== updatedCourse.id);
@@ -166,11 +166,25 @@ export const useSchedule = () => {
 
   const removeCourse = (courseId: string) => {
     if (!currentScheduleId) return;
-    setSchedules(schedules.map(schedule => {
+    setSchedules(prevSchedules => prevSchedules.map(schedule => {
       if (schedule.id === currentScheduleId) {
         return {
           ...schedule,
           courses: schedule.courses.filter(c => c.id !== courseId)
+        };
+      }
+      return schedule;
+    }));
+  };
+
+  const removeCourses = (courseIds: string[]) => {
+    if (!currentScheduleId) return;
+    const idsToRemove = new Set(courseIds);
+    setSchedules(prevSchedules => prevSchedules.map(schedule => {
+      if (schedule.id === currentScheduleId) {
+        return {
+          ...schedule,
+          courses: schedule.courses.filter(c => !idsToRemove.has(c.id))
         };
       }
       return schedule;
@@ -196,7 +210,7 @@ export const useSchedule = () => {
       }
     }
 
-    setSchedules(schedules.map(s => {
+    setSchedules(prevSchedules => prevSchedules.map(s => {
       if (s.id === currentScheduleId) {
         return {
           ...s,
@@ -312,6 +326,7 @@ export const useSchedule = () => {
     deleteSchedule,
     addCourse,
     removeCourse,
+    removeCourses,
     updateCourse,
     toggleCourseStatus,
     importCourses,

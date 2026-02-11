@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Schedule } from '../types';
 import { Plus, Trash, Edit2, Check, X, Loader } from 'lucide-react';
 import Scrollable from './Scrollable';
+import ConfirmationModal from './ConfirmationModal';
 
 interface ScheduleManagerProps {
   schedules: Schedule[];
@@ -28,6 +29,7 @@ const ScheduleManager: React.FC<ScheduleManagerProps> = ({
   const [editError, setEditError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [successId, setSuccessId] = useState<string | null>(null);
+  const [scheduleToDelete, setScheduleToDelete] = useState<string | null>(null);
 
   const handleCreate = (e: React.FormEvent) => {
     e.preventDefault();
@@ -92,7 +94,7 @@ const ScheduleManager: React.FC<ScheduleManagerProps> = ({
     <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md mb-6 flex flex-wrap gap-4 items-center transition-colors duration-200">
       <div className="flex-grow min-w-0">
         <Scrollable>
-        <div className="flex gap-4 pb-2 items-center flex-wrap">
+        <div className="flex gap-4 pb-2 items-center">
         {schedules.map(schedule => (
           <div
             key={schedule.id}
@@ -162,9 +164,7 @@ const ScheduleManager: React.FC<ScheduleManagerProps> = ({
                         <button
                             onClick={(e) => {
                                 e.stopPropagation();
-                                if (window.confirm('¿Estás seguro de eliminar este horario?')) {
-                                onDeleteSchedule(schedule.id);
-                                }
+                                setScheduleToDelete(schedule.id);
                             }}
                             className={`p-2 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition-colors focus:outline-none focus:ring-2 focus:ring-red-400 ${currentScheduleId === schedule.id ? 'text-white' : 'text-gray-600 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400'}`}
                             title="Eliminar"
@@ -221,6 +221,21 @@ const ScheduleManager: React.FC<ScheduleManagerProps> = ({
           Nuevo Horario
         </button>
       )}
+
+      <ConfirmationModal
+        isOpen={!!scheduleToDelete}
+        onClose={() => setScheduleToDelete(null)}
+        onConfirm={() => {
+            if (scheduleToDelete) {
+                onDeleteSchedule(scheduleToDelete);
+                setScheduleToDelete(null);
+            }
+        }}
+        title="Eliminar Horario"
+        message="¿Estás seguro de que deseas eliminar este horario? Esta acción eliminará permanentemente todos los cursos asociados y no se puede deshacer."
+        confirmText="Eliminar Horario"
+        isDestructive={true}
+      />
     </div>
   );
 };

@@ -41,7 +41,7 @@ function App() {
     deleteSchedule,
     addCourse,
     updateCourse,
-    removeCourse,
+    removeCourses,
     toggleCourseStatus,
     importCourses,
     addCourses,
@@ -144,7 +144,7 @@ function App() {
   const handleBulkDelete = (courseIds: string[]) => {
       try {
           setError(null);
-          courseIds.forEach(id => removeCourse(id));
+          removeCourses(courseIds);
       } catch (err: any) {
           setError(err.message);
           setTimeout(() => setError(null), 5000);
@@ -259,7 +259,7 @@ function App() {
               />
             </div>
 
-            <div className="w-full xl:flex-1 space-y-6">
+            <div className="w-full xl:flex-1 min-w-0 space-y-6">
               <ScheduleView
                 schedule={currentSchedule}
                 onRemoveCourse={handleUnscheduleFromView}
