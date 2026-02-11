@@ -14,7 +14,9 @@ export const STATUSES = [
   'Presencial',
   'Virtual',
   'Semipresencial',
-  'Asistido'
+  'Asistido',
+  'Bimodal',
+  'Regular'
 ];
 
 export const DEFAULT_COURSE_COLOR = '#0066CC';
